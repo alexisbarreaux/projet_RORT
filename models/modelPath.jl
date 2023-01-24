@@ -57,6 +57,7 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
     # Linearisation constraints
     @constraint(model, [(i,j,_) in eachrow(A_1), k in 1:numberOfCommodities], z[i,j,k] <= T[i,j])
     @constraint(model, [(i,j,_) in eachrow(A_1), k in 1:numberOfCommodities], z[i,j,k] <= y[i,j,k]*M)
+    @constraint(model, [(i,j,_) in eachrow(A_1), k in 1:numberOfCommodities], T[i,j] - z[i,j,k] <= M * (1 - y[i,j,k]))
 
     # Constraints from the sub problems
     for k in 1:numberOfCommodities
