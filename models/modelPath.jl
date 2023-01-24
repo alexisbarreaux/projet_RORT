@@ -3,6 +3,7 @@ using CPLEX
 
 include("../utils/constants.jl")
 include("../utils/graphBuildingUtils.jl")
+include("../utils/jsonUtils.jl")
 
 """
 include("./models/modelPath.jl")
@@ -12,6 +13,14 @@ pathSolve("dummy_graph.txt")
 # Expected result on dummy_graph is 3
 """
 
+function solveAll(resultFile::String="results.json")
+    results =  Dict{String, Float64}()
+    for file in DATA_FILES
+        results[file] = pathSolve(file)
+    end
+    filePath =RESULTS_DIR_PATH * "\\" * resultFile
+    jsonDropToFile(filePath, results)
+end
 
 function pathSolve(inputFile::String, silent::Bool=true)::Any
     """
