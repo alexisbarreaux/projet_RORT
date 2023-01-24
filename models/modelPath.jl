@@ -44,9 +44,9 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
     M = 100 # TODO improve the big M
 
     ### Variables
-    @variable(model, T[i in 1:n, j in 1:n] >= 0)
+    @variable(model, T[i in 1:n, j in 1:n] >= 0.)
     @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities], Bin)
-    @variable(model, z[i in 1:n, j in 1:n, k in 1:numberOfCommodities] >= 0)
+    @variable(model, z[i in 1:n, j in 1:n, k in 1:numberOfCommodities] >= 0.)
     # Variables from second level
     @variable(model, alpha[i in 1:n, k in 1:numberOfCommodities])
     
@@ -75,6 +75,7 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
         # Dual objective
         @constraint(model, alpha[source,k] + alpha[dest,k] >= sum(c_a*y[i,j,k] + z[i,j,k] for (i,j,c_a) in eachrow(A_1)) + sum(c_a*y[i,j,k] for (i,j,c_a) in eachrow(A_2)))
 
+        # TODO relire les alphas
         for (i,j,c_a) in eachrow(A_1)
             if i == source
                 @constraint(model, alpha[i,k] + alpha[j,k] <= c_a + T[i,j])
@@ -116,6 +117,22 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
     optimize!(model)
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
+
+    y_val = JuMP.value.(y)
+    T_val = JuMP.value.(T)
+    z_val = JuMP.value.(z)
+
+    for (i,j,_) in eachrow(A_1)
+        if T_val[i,j] > 0.0
+            println("Edge " * string(i) * " -> " * string(j) * " toll is " * string(T_val[i,j]))
+            for k in 1:numberOfCommodities
+                if y_val[i,j,k] > 0.0
+                    println("Commodity "* string(k) * " uses edge. z is " * string(z_val[i,j,k]))
+                end
+            end
+        end
+    end
+
     if feasibleSolutionFound
         return JuMP.objective_value(model)
     else
