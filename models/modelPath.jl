@@ -22,7 +22,7 @@ function solveAll(resultFile::String="results.json")
     jsonDropToFile(filePath, results)
 end
 
-function pathSolve(inputFile::String, silent::Bool=true)::Any
+function pathSolve(inputFile::String, silent::Bool=false)::Any
     """
     """
     println("Solving ", inputFile)
@@ -78,17 +78,32 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
 
         # TODO relire les alphas
         for (i,j,c_a) in eachrow(A_1)
+            # i = s
             if i == source
-                @constraint(model, alpha[i,k] + alpha[j,k] <= c_a + T[i,j])
+                # (s,t)
+                if j == dest
+                    @constraint(model, alpha[i,k] + alpha[j,k] <= c_a + T[i,j])
+                # (s,j)
+                else
+                    @constraint(model, alpha[i,k] + alpha[j,k] <= c_a + T[i,j])
+                end
+            # i = t
             elseif i == dest
+                # (t, s)
                 if j == source
                     continue
+                # (t,j)
                 else 
                     @constraint(model, alpha[j,k] <= c_a + T[i,j])
                 end
             else
+                # (i,s)
                 if j == source
                     @constraint(model, -alpha[i,k] <= c_a + T[i,j])
+                # (i,t)
+                elseif j == dest
+                    @constraint(model, alpha[j,k] -alpha[i,k] <= c_a + T[i,j])
+                # (i,j)
                 else
                     @constraint(model, alpha[j,k] -alpha[i,k] <= c_a + T[i,j])
                 end
@@ -96,19 +111,34 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
         end
     
         for (i,j,c_a) in eachrow(A_2)
-            if i == source
-                @constraint(model, alpha[i,k] + alpha[j,k] <= c_a)
+               # i = s
+               if i == source
+                # (s,t)
+                if j == dest
+                    @constraint(model, alpha[i,k] + alpha[j,k] <= c_a)
+                # (s,j)
+                else
+                    @constraint(model, alpha[i,k] + alpha[j,k] <= c_a)
+                end
+            # i = t
             elseif i == dest
+                # (t, s)
                 if j == source
                     continue
+                # (t,j)
                 else 
                     @constraint(model, alpha[j,k] <= c_a)
                 end
             else
+                # (i,s)
                 if j == source
                     @constraint(model, -alpha[i,k] <= c_a)
+                # (i,t)
+                elseif j == dest
+                    @constraint(model, alpha[j,k] -alpha[i,k] <= c_a)
+                # (i,j)
                 else
-                    @constraint(model, alpha[j,k] - alpha[i,k] <= c_a)
+                    @constraint(model, alpha[j,k] -alpha[i,k] <= c_a)
                 end
             end
         end
