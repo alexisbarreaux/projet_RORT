@@ -41,7 +41,7 @@ function pathSolve(inputFile::String, silent::Bool=false)::Any
         set_silent(model)
     end
 
-    M = 1000 # TODO improve the big M
+    M = 100# TODO improve the big M
 
     ### Variables
     @variable(model, T[i in 1:n, j in 1:n] >= 0.)
