@@ -45,7 +45,7 @@ function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::Str
 end
 
 
-function solveAllInstances(timeLimit::Float64=-1., resultFile::String=RESULTS_FILE)::Nothing
+function solveAllInstances(resultFile::String=RESULTS_FILE, timeLimit::Float64=-1.)::Nothing
     # Loading
     filePath =RESULTS_DIR_PATH * "\\" * resultFile * ".csv"
     # Get unoptimal instance
