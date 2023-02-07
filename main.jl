@@ -27,7 +27,7 @@ function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::Str
             return true
         else
             currentRow= currentResults[rowToReplace,:]
-            if value < currentRow.value || (solveTime > currentRow.time && value < currentRow.value + 1e-6)
+            if value > currentRow.value || (solveTime > currentRow.time && value > currentRow.value + 1e-6)
                 println("Improved value for " * fileToRun)
                 currentResults[rowToReplace,:] = [fileToRun optimal solveTime value bound gap]
                 return true
@@ -35,7 +35,7 @@ function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::Str
         end
     else
         currentRow = currentResults[rowToReplace,:]
-        if value < currentRow.value || (solveTime > currentRow.time && value < currentRow.value + 1e-6)
+        if value > currentRow.value || (solveTime > currentRow.time && value > currentRow.value + 1e-6)
             println("Improved value for " * fileToRun)
             currentResults[rowToReplace,:] = [fileToRun optimal solveTime value bound gap]
             return true

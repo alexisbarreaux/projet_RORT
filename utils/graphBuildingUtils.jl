@@ -12,3 +12,13 @@ function buildGraphFromInstance(n::Int64, A_1::Matrix{Int64}, A_2::Matrix{Int64}
 
     return graph
 end
+
+function buildA2Graph(n::Int64, A_2::Matrix{Int64})::DiGraph
+    graph = DiGraph(n)
+
+    for (i,j, _) in eachrow(A_2)
+        add_edge!(graph, i, j)
+    end
+
+    return graph
+end
