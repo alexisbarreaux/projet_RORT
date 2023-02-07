@@ -27,7 +27,7 @@ function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::Str
             return true
         else
             currentRow= currentResults[rowToReplace,:]
-            if value < currentRow.value || (solveTime > currentRow.time && value <= currentRow.value + 1e-6)
+            if value < currentRow.value || (solveTime > currentRow.time && value < currentRow.value + 1e-6)
                 println("Improved value for " * fileToRun)
                 currentResults[rowToReplace,:] = [fileToRun optimal solveTime value bound gap]
                 return true
@@ -35,7 +35,7 @@ function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::Str
         end
     else
         currentRow = currentResults[rowToReplace,:]
-        if value < currentRow.value || (solveTime > currentRow.time && value <= currentRow.value + 1e-6)
+        if value < currentRow.value || (solveTime > currentRow.time && value < currentRow.value + 1e-6)
             println("Improved value for " * fileToRun)
             currentResults[rowToReplace,:] = [fileToRun optimal solveTime value bound gap]
             return true
@@ -56,7 +56,9 @@ function solveAllInstances(resultFile::String=RESULTS_FILE, timeLimit::Float64=-
     end
 
     # Run
-    for fileToRun in DATA_FILES
+    for fileToRun in ["taxe_grille_8x14.txt",
+        "taxe_grille_8x9.txt", "taxe_grille_9x10.txt", "taxe_grille_9x11.txt", "taxe_grille_9x12.txt",
+        "taxe_grille_9x13.txt"]
         updatedDf = runInstanceAndUpdateDataframe(currentResults, fileToRun, timeLimit)
         if updatedDf
             CSV.write(filePath, currentResults, delim=";")
