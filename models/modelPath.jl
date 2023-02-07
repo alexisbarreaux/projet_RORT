@@ -13,16 +13,7 @@ pathSolve("dummy_graph.txt")
 # Expected result on dummy_graph is 3
 """
 
-function solveAll(resultFile::String="results.json")
-    results =  Dict{String, Float64}()
-    for file in DATA_FILES
-        results[file] = round(pathSolve(file, true))
-    end
-    filePath =RESULTS_DIR_PATH * "\\" * resultFile
-    jsonDropToFile(filePath, results)
-end
-
-function pathSolve(inputFile::String, silent::Bool=false)::Any
+function pathSolve(inputFile::String, timeLimit::Float64, silent::Bool=false)::Any
     """
     """
     println("Solving ", inputFile)
@@ -39,6 +30,9 @@ function pathSolve(inputFile::String, silent::Bool=false)::Any
     model = Model(CPLEX.Optimizer)
     if silent
         set_silent(model)
+    end
+    if timeLimit >= 0
+        set_time_limit_sec(model, timeLimit)
     end
 
     M = 100# TODO improve the big M
@@ -164,8 +158,13 @@ function pathSolve(inputFile::String, silent::Bool=false)::Any
         end
     end
 
+    value = JuMP.objective_value(model)
+    solveTime = round(JuMP.solve_time(model), digits= 5)
+    gap = JuMP.relative_gap(model)
+    bound = JuMP.objective_bound(model)
+
     if feasibleSolutionFound
-        return JuMP.objective_value(model)
+        return isOptimal, solveTime, value, bound, gap
     else
         println("Problem is not feasible !!!")
         return
