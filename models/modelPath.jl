@@ -13,12 +13,12 @@ pathSolve("dummy_graph.txt")
 # Expected result on dummy_graph is 3
 """
 
-function solveAll(resultFile::String="results.json")
-    results =  Dict{String, Float64}()
+function solveAll(resultFile::String="results_test.json")
+    results = Dict{String,Float64}()
     for file in DATA_FILES
         results[file] = pathSolve(file)
     end
-    filePath =RESULTS_DIR_PATH * "\\" * resultFile
+    filePath = RESULTS_DIR_PATH * "\\" * resultFile
     jsonDropToFile(filePath, results)
 end
 
@@ -44,71 +44,71 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
     M = 100 # TODO improve the big M
 
     ### Variables
-    @variable(model, T[i in 1:n, j in 1:n] >= 0.)
+    @variable(model, T[i in 1:n, j in 1:n] >= 0.0)
     @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities], Bin)
-    @variable(model, z[i in 1:n, j in 1:n, k in 1:numberOfCommodities] >= 0.)
+    @variable(model, z[i in 1:n, j in 1:n, k in 1:numberOfCommodities] >= 0.0)
     # Variables from second level
     @variable(model, alpha[i in 1:n, k in 1:numberOfCommodities])
-    
+
     # Objective : sum on a in A_1 and k in K of the z_a * n_k
-    @objective(model, Max, sum(z[i,j,k] * n_k[k] for (i,j,_) in eachrow(A_1) for k in 1:numberOfCommodities))
+    @objective(model, Max, sum(z[i, j, k] * n_k[k] for (i, j, _) in eachrow(A_1) for k in 1:numberOfCommodities))
 
     ### Constraints
     # Linearisation constraints
-    @constraint(model, [(i,j,_) in eachrow(A_1), k in 1:numberOfCommodities], z[i,j,k] <= T[i,j])
-    @constraint(model, [(i,j,_) in eachrow(A_1), k in 1:numberOfCommodities], z[i,j,k] <= y[i,j,k]*M)
-    @constraint(model, [(i,j,_) in eachrow(A_1), k in 1:numberOfCommodities], T[i,j] - z[i,j,k] <= M * (1 - y[i,j,k]))
+    @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= T[i, j])
+    @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= y[i, j, k] * M)
+    @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], T[i, j] - z[i, j, k] <= M * (1 - y[i, j, k]))
 
     # Constraints from the sub problems
     for k in 1:numberOfCommodities
-        (source, dest) = K[k,:]
+        (source, dest) = K[k, :]
         ## Primal constraints
         for i in 1:n
             if i == source
-                @constraint(model, sum(y[i,succ,k] for succ in outneighbors(graph, i)) == 1)
+                @constraint(model, sum(y[i, succ, k] for succ in outneighbors(graph, i)) == 1)
             elseif i == dest
-                @constraint(model, sum(y[pred,i,k] for pred in inneighbors(graph, i)) == 1)
+                @constraint(model, sum(y[pred, i, k] for pred in inneighbors(graph, i)) == 1)
             else
-                @constraint(model, (sum(y[pred,i,k] for pred in inneighbors(graph, i)) - sum(y[i,succ,k] for succ in outneighbors(graph, i))) == 0)
+                @constraint(model, (sum(y[pred, i, k] for pred in inneighbors(graph, i)) - sum(y[i, succ, k] for succ in outneighbors(graph, i))) == 0)
             end
         end
         ## Dual constraints
         # Dual objective
-        @constraint(model, alpha[source,k] + alpha[dest,k] >= sum(c_a*y[i,j,k] + z[i,j,k] for (i,j,c_a) in eachrow(A_1)) + sum(c_a*y[i,j,k] for (i,j,c_a) in eachrow(A_2)))
+        @constraint(model, alpha[source, k] + alpha[dest, k] >= sum(c_a * y[i, j, k] + z[i, j, k] for (i, j, c_a) in eachrow(A_1)) + sum(c_a * y[i, j, k] for (i, j, c_a) in eachrow(A_2)))
 
         # TODO relire les alphas
-        for (i,j,c_a) in eachrow(A_1)
+        for (i, j, c_a) in eachrow(A_1)
             if i == source
-                @constraint(model, alpha[i,k] + alpha[j,k] <= c_a + T[i,j])
+                @constraint(model, alpha[i, k] + alpha[j, k] <= c_a + T[i, j])
             elseif i == dest
                 if j == source
                     continue
-                else 
-                    @constraint(model, alpha[j,k] <= c_a + T[i,j])
+                else
+                    @constraint(model, alpha[j, k] <= c_a + T[i, j])
                 end
             else
                 if j == source
-                    @constraint(model, -alpha[i,k] <= c_a + T[i,j])
+                    @constraint(model, -alpha[i, k] <= c_a + T[i, j])
                 else
-                    @constraint(model, alpha[j,k] -alpha[i,k] <= c_a + T[i,j])
+                    @constraint(model, alpha[j, k] - alpha[i, k] <= c_a + T[i, j])
                 end
             end
         end
-    
-        for (i,j,c_a) in eachrow(A_2)
+
+        for (i, j, c_a) in eachrow(A_2)
             if i == source
-                @constraint(model, alpha[i,k] + alpha[j,k] <= c_a)
+                @constraint(model, alpha[i, k] + alpha[j, k] <= c_a)
             elseif i == dest
                 if j == source
                     continue
-                else 
-                    @constraint(model, alpha[j,k] <= c_a)
+                else
+                    @constraint(model, alpha[j, k] <= c_a)
                 end
             else
                 if j == source
-                    @constraint(model, -alpha[i,k] <= c_a)
+                    @constraint(model, -alpha[i, k] <= c_a)
                 else
-                    @constraint(model, alpha[j,k] - alpha[i,k] <= c_a)
+                    @constraint(model, alpha[j, k] - alpha[i, k] <= c_a)
                 end
             end
         end
@@ -123,12 +123,12 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
     T_val = JuMP.value.(T)
     z_val = JuMP.value.(z)
 
-    for (i,j,_) in eachrow(A_1)
-        if T_val[i,j] > 0.0
-            println("Edge " * string(i) * " -> " * string(j) * " toll is " * string(T_val[i,j]))
+    for (i, j, _) in eachrow(A_1)
+        if T_val[i, j] > 0.0
+            println("Edge " * string(i) * " -> " * string(j) * " toll is " * string(T_val[i, j]))
             for k in 1:numberOfCommodities
-                if y_val[i,j,k] > 0.0
-                    println("Commodity "* string(k) * " uses edge. z is " * string(z_val[i,j,k]))
+                if y_val[i, j, k] > 0.0
+                    println("Commodity " * string(k) * " uses edge. z is " * string(z_val[i, j, k]))
                 end
             end
         end
