@@ -13,16 +13,7 @@ pathSolve("dummy_graph.txt")
 # Expected result on dummy_graph is 3
 """
 
-function solveAll(resultFile::String="results_test.json")
-    results = Dict{String,Float64}()
-    for file in DATA_FILES
-        results[file] = pathSolve(file)
-    end
-    filePath = RESULTS_DIR_PATH * "\\" * resultFile
-    jsonDropToFile(filePath, results)
-end
-
-function pathSolve(inputFile::String, silent::Bool=true)::Any
+function pathSolve(inputFile::String, timeLimit::Float64, silent::Bool=false)::Any
     """
     """
     println("Solving ", inputFile)
@@ -40,8 +31,11 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
     if silent
         set_silent(model)
     end
+    if timeLimit >= 0
+        set_time_limit_sec(model, timeLimit)
+    end
 
-    M = 100 # TODO improve the big M
+    M = 100# TODO improve the big M
 
     ### Variables
     @variable(model, T[i in 1:n, j in 1:n] >= 0.0)
@@ -76,19 +70,33 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
         # Dual objective
         @constraint(model, alpha[source, k] + alpha[dest, k] >= sum(c_a * y[i, j, k] + z[i, j, k] for (i, j, c_a) in eachrow(A_1)) + sum(c_a * y[i, j, k] for (i, j, c_a) in eachrow(A_2)))
 
-        # TODO relire les alphas
         for (i, j, c_a) in eachrow(A_1)
+            # i = s
             if i == source
-                @constraint(model, alpha[i, k] + alpha[j, k] <= c_a + T[i, j])
+                # (s,t)
+                if j == dest
+                    @constraint(model, alpha[source, k] + alpha[dest, k] <= c_a + T[i, j])
+                    # (s,j)
+                else
+                    @constraint(model, alpha[source, k] + alpha[j, k] <= c_a + T[i, j])
+                end
+                # i = t
             elseif i == dest
+                # (t, s)
                 if j == source
                     continue
+                    # (t,j)
                 else
                     @constraint(model, alpha[j, k] <= c_a + T[i, j])
                 end
             else
+                # (i,s)
                 if j == source
                     @constraint(model, -alpha[i, k] <= c_a + T[i, j])
+                    # (i,t)
+                elseif j == dest
+                    @constraint(model, alpha[dest, k] - alpha[i, k] <= c_a + T[i, j])
+                    # (i,j)
                 else
                     @constraint(model, alpha[j, k] - alpha[i, k] <= c_a + T[i, j])
                 end
@@ -96,17 +104,32 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
         end
 
         for (i, j, c_a) in eachrow(A_2)
+            # i = s
             if i == source
-                @constraint(model, alpha[i, k] + alpha[j, k] <= c_a)
+                # (s,t)
+                if j == dest
+                    @constraint(model, alpha[i, k] + alpha[j, k] <= c_a)
+                    # (s,j)
+                else
+                    @constraint(model, alpha[i, k] + alpha[j, k] <= c_a)
+                end
+                # i = t
             elseif i == dest
+                # (t, s)
                 if j == source
                     continue
+                    # (t,j)
                 else
                     @constraint(model, alpha[j, k] <= c_a)
                 end
             else
+                # (i,s)
                 if j == source
                     @constraint(model, -alpha[i, k] <= c_a)
+                    # (i,t)
+                elseif j == dest
+                    @constraint(model, alpha[j, k] - alpha[i, k] <= c_a)
+                    # (i,j)
                 else
                     @constraint(model, alpha[j, k] - alpha[i, k] <= c_a)
                 end
@@ -119,23 +142,29 @@ function pathSolve(inputFile::String, silent::Bool=true)::Any
     feasibleSolutionFound = primal_status(model) == MOI.FEASIBLE_POINT
     isOptimal = termination_status(model) == MOI.OPTIMAL
 
-    y_val = JuMP.value.(y)
-    T_val = JuMP.value.(T)
-    z_val = JuMP.value.(z)
-
-    for (i, j, _) in eachrow(A_1)
-        if T_val[i, j] > 0.0
-            println("Edge " * string(i) * " -> " * string(j) * " toll is " * string(T_val[i, j]))
-            for k in 1:numberOfCommodities
-                if y_val[i, j, k] > 0.0
-                    println("Commodity " * string(k) * " uses edge. z is " * string(z_val[i, j, k]))
+    if !silent
+        y_val = JuMP.value.(y)
+        T_val = JuMP.value.(T)
+        z_val = JuMP.value.(z)
+        for (i, j, _) in eachrow(A_1)
+            if T_val[i, j] > 0.0
+                println("Edge " * string(i) * " -> " * string(j) * " toll is " * string(T_val[i, j]))
+                for k in 1:numberOfCommodities
+                    if y_val[i, j, k] > 0.0
+                        println("Commodity " * string(k) * " uses edge. z is " * string(z_val[i, j, k]))
+                    end
                 end
             end
         end
     end
 
+    value = JuMP.objective_value(model)
+    solveTime = round(JuMP.solve_time(model), digits=5)
+    gap = JuMP.relative_gap(model)
+    bound = JuMP.objective_bound(model)
+
     if feasibleSolutionFound
-        return JuMP.objective_value(model)
+        return isOptimal, solveTime, value, bound, gap
     else
         println("Problem is not feasible !!!")
         return
