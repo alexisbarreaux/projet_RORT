@@ -56,9 +56,7 @@ function solveAllInstances(resultFile::String=RESULTS_FILE, timeLimit::Float64=-
     end
 
     # Run
-    for fileToRun in ["taxe_grille_8x14.txt",
-        "taxe_grille_8x9.txt", "taxe_grille_9x10.txt", "taxe_grille_9x11.txt", "taxe_grille_9x12.txt",
-        "taxe_grille_9x13.txt"]
+    for fileToRun in DATA_FILES
         updatedDf = runInstanceAndUpdateDataframe(currentResults, fileToRun, timeLimit)
         if updatedDf
             CSV.write(filePath, currentResults, delim=";")

@@ -13,7 +13,6 @@ taxe_grille_7x8.txt;true;0.696;42.0;42.0;0.0
 taxe_grille_7x9.txt;true;1.076;58.0;58.0;0.0
 taxe_grille_8x10.txt;true;0.473;35.0;35.0;0.0
 taxe_grille_8x9.txt;true;1.226;30.0;30.0;0.0
-taxe_grille_6x8.txt;true;0.499;40.999999999999986;40.999999999999986;0.0
 taxe_grille_10x10.txt;true;9.666;97.0;97.0075461582506;7.779544588244678e-5
 taxe_grille_10x5.txt;true;0.463;136.0;136.0;0.0
 taxe_grille_10x6.txt;true;0.559;90.0;90.0;0.0
@@ -28,3 +27,4 @@ taxe_grille_9x10.txt;true;1.813;67.0;67.0;0.0
 taxe_grille_9x11.txt;true;2.334;79.0;79.0;0.0
 taxe_grille_9x12.txt;true;3.012;140.0;140.0;0.0
 taxe_grille_9x13.txt;true;46.474;176.00000000000006;176.00000000000006;0.0
+taxe_grille_6x8.txt;true;0.35;40.999999999999986;40.999999999999986;0.0
