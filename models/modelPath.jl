@@ -13,7 +13,7 @@ pathSolve("dummy_graph.txt")
 # Expected result on dummy_graph is 3
 """
 
-function pathSolve(inputFile::String, timeLimit::Float64, silent::Bool=false)::Any
+function pathSolve(inputFile::String, timeLimit::Float64= -1., silent::Bool=false)::Any
     """
     """
     println("Solving ", inputFile)
@@ -35,7 +35,7 @@ function pathSolve(inputFile::String, timeLimit::Float64, silent::Bool=false)::A
         set_time_limit_sec(model, timeLimit)
     end
 
-    M = 100# TODO improve the big M
+    M = 10000# TODO improve the big M
 
     ### Variables
     @variable(model, T[i in 1:n, j in 1:n] >= 0.0)
