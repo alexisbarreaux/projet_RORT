@@ -1,0 +1,16 @@
+instance;optimal;time;value;bound;gap
+taxe_grille_2x3.txt;true;0.016;10.0;10.0;0.0
+taxe_grille_3x4.txt;true;0.0;9.0;9.0;0.0
+taxe_grille_4x5.txt;true;0.031;18.0;18.0;0.0
+taxe_grille_5x6.txt;true;0.094;38.0;38.0;0.0
+taxe_grille_6x10.txt;true;0.219;39.000000048868685;39.000000048868685;0.0
+taxe_grille_6x11.txt;true;0.442;86.0;86.0;0.0
+taxe_grille_6x7.txt;true;0.141;34.00000000000364;34.00000000000364;0.0
+taxe_grille_6x8.txt;true;0.158;41.0;41.0;0.0
+taxe_grille_6x9.txt;true;0.268;39.0;39.0;0.0
+taxe_grille_7x10.txt;true;0.141;77.0;77.0;0.0
+taxe_grille_7x11.txt;true;0.359;105.0;105.0;0.0
+taxe_grille_7x8.txt;true;0.157;42.0;42.0;0.0
+taxe_grille_7x9.txt;true;0.346;58.0;58.0;0.0
+taxe_grille_8x10.txt;true;0.159;35.0;35.0;0.0
+taxe_grille_8x9.txt;true;0.298;30.0;30.0;0.0
