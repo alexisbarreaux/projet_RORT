@@ -68,11 +68,16 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
     end
 
     ### Variables
-    @variable(model, T[i in 1:n, j in 1:n] >= 0.0)
+    # Fix T if needed
+    if T_val != nothing
+        T = T_val
+    else
+        @variable(model, T[i in 1:n, j in 1:n] >= 0.0)
+    end
     if !relaxed
         @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities], Bin)
     else
-        @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities])
+        @variable(model, 0. <= y[i in 1:n, j in 1:n, k in 1:numberOfCommodities] <= 1.)
     end
     @variable(model, z[i in 1:n, j in 1:n, k in 1:numberOfCommodities] >= 0.0)
     # Variables from second level
@@ -82,10 +87,6 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
     @objective(model, Max, sum(z[i, j, k] * n_k[k] for (i, j, _) in eachrow(A_1) for k in 1:numberOfCommodities))
 
     ### Constraints
-    # Fix T if needed
-    if T_val != nothing
-        @constraint(model, [i in 1:n, j in 1:n], T[i,j] == T_val[i,j])
-    end
     # Linearisation constraints
     @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= T[i, j])
     if boundMode != 2

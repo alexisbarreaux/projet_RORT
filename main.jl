@@ -62,8 +62,10 @@ function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, f
         return false
     end
     _, heurSolveTime, heurValue, _, _ = heurRes
+
+    heurGap = round(100*heurValue/value, digits=1)
     
-    push!(currentResults, [fileToRun optimal solveTime heurSolveTime value heurValue bound gap])
+    push!(currentResults, [fileToRun optimal solveTime heurSolveTime value heurValue heurGap])
     return true
 end
 
@@ -93,7 +95,7 @@ function solveAllInstancesWithHeuristic(resultFile::String=HEUR_RESULTS_FILE, ti
     filePath =RESULTS_DIR_PATH * "\\" * resultFile * ".csv"
     # Get unoptimal instance
     if !isfile(filePath)
-        currentResults = DataFrame(instance=String[], optimal=Bool[], time=Float64[], heur_time=Float64[],  value=Float64[], heur_value=Float64[], bound=Float64[], gap=Float64[])
+        currentResults = DataFrame(instance=String[], optimal=Bool[], time=Float64[], heur_time=Float64[],  value=Float64[], heur_value=Float64[], heur_gap=Float64[])
     else
         currentResults = DataFrame(CSV.File(filePath))
     end
