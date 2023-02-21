@@ -3,10 +3,12 @@ using CSV
 
 include("./utils/constants.jl")
 include("./models/modelPath.jl")
+include("./heuristics/heuristic2.jl")
 
 """
 include("./main.jl")
 solveAllInstances()
+solveAllInstancesWithHeuristic()
 """
 
 function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::String, timeLimit::Float64, rowToReplace::Union{Int, Nothing}=nothing)::Bool
@@ -45,6 +47,27 @@ function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::Str
 end
 
 
+function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, fileToRun::String, timeLimit::Float64, rowToReplace::Union{Int, Nothing}=nothing)::Bool
+    
+    result = pathSolve(fileToRun, timeLimit, true)
+    if result == nothing
+        println("NOT FEASIBLE!!")
+        return false
+    end
+    optimal, solveTime, value, bound, gap = result
+
+    heurRes = heurSolve(fileToRun)
+    if result == nothing
+        println("Heuristic NOT FEASIBLE!!")
+        return false
+    end
+    _, heurSolveTime, heurValue, _, _ = result
+    
+    push!(currentResults, [fileToRun optimal solveTime heurSolveTime value heurValue bound gap])
+    return true
+end
+
+
 function solveAllInstances(resultFile::String=RESULTS_FILE, timeLimit::Float64=-1.)::Nothing
     # Loading
     filePath =RESULTS_DIR_PATH * "\\" * resultFile * ".csv"
@@ -58,6 +81,26 @@ function solveAllInstances(resultFile::String=RESULTS_FILE, timeLimit::Float64=-
     # Run
     for fileToRun in DATA_FILES
         updatedDf = runInstanceAndUpdateDataframe(currentResults, fileToRun, timeLimit)
+        if updatedDf
+            CSV.write(filePath, currentResults, delim=";")
+        end
+    end
+    return 
+end
+
+function solveAllInstancesWithHeuristic(resultFile::String=HEUR_RESULTS_FILE, timeLimit::Float64=-1.)::Nothing
+    # Loading
+    filePath =RESULTS_DIR_PATH * "\\" * resultFile * ".csv"
+    # Get unoptimal instance
+    if !isfile(filePath)
+        currentResults = DataFrame(instance=String[], optimal=Bool[], time=Float64[], heur_time=Float64[],  value=Float64[], heur_value=Float64[], bound=Float64[], gap=Float64[])
+    else
+        currentResults = DataFrame(CSV.File(filePath))
+    end
+
+    # Run
+    for fileToRun in DATA_FILES
+        updatedDf = runInstanceAndUpdateDataframeWithHeuristic(currentResults, fileToRun, timeLimit)
         if updatedDf
             CSV.write(filePath, currentResults, delim=";")
         end

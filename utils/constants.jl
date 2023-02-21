@@ -4,6 +4,7 @@ RESULTS_DIR_PATH = dirname(UTILS_DIR_PATH) * "\\results"
 DATA_DIR_PATH = dirname(UTILS_DIR_PATH) * "\\data"
 
 RESULTS_FILE = "results"
+HEUR_RESULTS_FILE = "heur_results"
 
 DATA_FILES = ["taxe_grille_10x10.txt", "taxe_grille_10x5.txt", "taxe_grille_10x6.txt", "taxe_grille_10x7.txt",
 "taxe_grille_10x8.txt", "taxe_grille_10x9.txt", "taxe_grille_2x3.txt", "taxe_grille_3x4.txt",

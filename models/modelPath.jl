@@ -203,11 +203,11 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
 
     
     if feasibleSolutionFound
+        solveTime = round(JuMP.solve_time(model), digits=5)
         if relaxed
-            return JuMP.value.(T)
+            return JuMP.value.(T), solveTime
         else
-            value = JuMP.objective_value(model)
-            solveTime = round(JuMP.solve_time(model), digits=5)
+            value = round(JuMP.objective_value(model), digits=5)
             gap = JuMP.relative_gap(model)
             bound = JuMP.objective_bound(model)
             return isOptimal, solveTime, value, bound, gap
