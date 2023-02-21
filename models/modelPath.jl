@@ -13,10 +13,16 @@ pathSolve("dummy_graph.txt")
 # Expected result on dummy_graph is 3
 """
 
-function pathSolve(inputFile::String, timeLimit::Float64= -1., silent::Bool=false, boundMode::Int64=2)::Any
+function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true, boundMode::Int64=2, relaxed::Bool=false, T_val::Any=nothing)::Any
     """
     """
-    println("Solving ", inputFile)
+    if relaxed
+        println("Solving relaxation")
+    elseif T_val != nothing
+        println("Solving with fixed T")
+    else
+        printtln("Solving ", inputFile)
+    end
     # Directly load data file
     include(DATA_DIR_PATH * "\\" * inputFile)
     graph = buildGraphFromInstance(n, A_1, A_2)
@@ -63,7 +69,11 @@ function pathSolve(inputFile::String, timeLimit::Float64= -1., silent::Bool=fals
 
     ### Variables
     @variable(model, T[i in 1:n, j in 1:n] >= 0.0)
-    @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities], Bin)
+    if !relaxed
+        @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities], Bin)
+    else
+        @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities])
+    end
     @variable(model, z[i in 1:n, j in 1:n, k in 1:numberOfCommodities] >= 0.0)
     # Variables from second level
     @variable(model, alpha[i in 1:n, k in 1:numberOfCommodities])
@@ -72,6 +82,10 @@ function pathSolve(inputFile::String, timeLimit::Float64= -1., silent::Bool=fals
     @objective(model, Max, sum(z[i, j, k] * n_k[k] for (i, j, _) in eachrow(A_1) for k in 1:numberOfCommodities))
 
     ### Constraints
+    # Fix T if needed
+    if T_val != nothing
+        @constraint(model, [i in 1:n, j in 1:n], T[i,j] == T_val[i,j])
+    end
     # Linearisation constraints
     @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= T[i, j])
     if boundMode != 2
@@ -189,11 +203,15 @@ function pathSolve(inputFile::String, timeLimit::Float64= -1., silent::Bool=fals
 
     
     if feasibleSolutionFound
-        value = JuMP.objective_value(model)
-        solveTime = round(JuMP.solve_time(model), digits=5)
-        gap = JuMP.relative_gap(model)
-        bound = JuMP.objective_bound(model)
-        return isOptimal, solveTime, value, bound, gap
+        if relaxed
+            return JuMP.value.(T)
+        else
+            value = JuMP.objective_value(model)
+            solveTime = round(JuMP.solve_time(model), digits=5)
+            gap = JuMP.relative_gap(model)
+            bound = JuMP.objective_bound(model)
+            return isOptimal, solveTime, value, bound, gap
+        end
     else
         println("Problem is not feasible !!!")
         return
