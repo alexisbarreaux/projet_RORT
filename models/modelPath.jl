@@ -21,7 +21,7 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
     elseif T_val != nothing
         println("Solving with fixed T")
     else
-        printtln("Solving ", inputFile)
+        println("Solving ", inputFile)
     end
     # Directly load data file
     include(DATA_DIR_PATH * "\\" * inputFile)
@@ -57,11 +57,45 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
             ds = dijkstra_shortest_paths(A2OnlyGraph, s_k, weights)
             M[(s_k, t_k)] = ds.dists[t_k]
         end
+        maxC_k = maximum([M[(s_k, t_k)] for (s_k, t_k) in eachrow(K)])
 
         # Measuring
         M_a =  Dict{Tuple{Int64, Int64}, Float64}()
         for (i, j, c_a) in eachrow(A_1)
-            M_a[(i,j)] = maximum([M[(s_k, t_k)] - c_a for (s_k, t_k) in eachrow(K)])
+            M_a[(i,j)] = maxC_k - c_a
+        end
+    elseif boundMode == 3
+        A2OnlyGraph = buildA2Graph(n, A_2)
+        
+        M = Dict{Tuple{Int64, Int64}, Float64}()
+        weights = Matrix{Float64}(undef, n, n)
+        for (i, j, c_a) in eachrow(A_2)
+            weights[i,j] = c_a
+        end
+        # Measuring M
+        for (s_k, t_k) in eachrow(K)
+            ds = dijkstra_shortest_paths(A2OnlyGraph, s_k, weights)
+            M[(s_k, t_k)] = ds.dists[t_k]
+        end
+        maxC_k = maximum([M[(s_k, t_k)] for (s_k, t_k) in eachrow(K)])
+
+        # Building M_a_k and M_a
+        M_a_k =  Dict{Tuple{Int64, Int64, Int64}, Float64}()
+        M_a =  Dict{Tuple{Int64, Int64}, Float64}()
+        for (i, j, c_a) in eachrow(A_1)
+            ds = dijkstra_shortest_paths(A2OnlyGraph, i, weights)
+            dijkstraValue = ds.dists[j]
+            if dijkstraValue != Inf
+                M_a[(i,j)] = dijkstraValue
+                for k in 1:numberOfCommodities
+                    M_a_k[(i,j,k)] = dijkstraValue
+                end
+            else
+                M_a[(i,j)] = maxC_k - c_a
+                for k in 1:numberOfCommodities
+                    M_a_k[(i,j,k)] = M[(K[k,1], K[k,2])]
+                end
+            end
         end
     else
         M = 100
@@ -89,12 +123,15 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
     ### Constraints
     # Linearisation constraints
     @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= T[i, j])
-    if boundMode != 2
-        @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= y[i, j, k] * M)
-        @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], T[i, j] - z[i, j, k] <= M * (1 - y[i, j, k]))
-    else
+    if boundMode == 2
         @constraint(model, [(i, j, c_a) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= y[i, j, k] * max(M[(K[k,1], K[k,2])] - c_a, 0))
         @constraint(model, [(i, j, c_a) in eachrow(A_1), k in 1:numberOfCommodities], T[i, j] - z[i, j, k] <= max(M_a[(i,j)], 0)  * (1 - y[i, j, k]))
+    elseif boundMode == 3
+        @constraint(model, [(i, j, c_a) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= y[i, j, k] * max(M_a_k[(i,j,k)] - c_a, 0))
+        @constraint(model, [(i, j, c_a) in eachrow(A_1), k in 1:numberOfCommodities], T[i, j] - z[i, j, k] <= max(M_a[(i,j)], 0)  * (1 - y[i, j, k]))
+    else
+        @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], z[i, j, k] <= y[i, j, k] * M)
+        @constraint(model, [(i, j, _) in eachrow(A_1), k in 1:numberOfCommodities], T[i, j] - z[i, j, k] <= M * (1 - y[i, j, k]))
     end
 
     # Constraints from the sub problems
