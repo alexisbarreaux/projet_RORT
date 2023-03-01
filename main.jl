@@ -63,7 +63,7 @@ function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, f
     end
     _, heurSolveTime, heurValue, _, _ = heurRes
 
-    heurGap = round(100*heurValue/value, digits=1)
+    heurGap = round(100- 100*heurValue/value, digits=1)
     
     push!(currentResults, [fileToRun optimal solveTime heurSolveTime value heurValue heurGap])
     return true
