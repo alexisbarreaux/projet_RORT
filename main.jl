@@ -4,6 +4,7 @@ using CSV
 include("./utils/constants.jl")
 include("./models/modelPath.jl")
 include("./heuristics/heuristic2.jl")
+include("./heuristics/heuristic3.jl")
 
 """
 include("./main.jl")
@@ -56,7 +57,7 @@ function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, f
     end
     optimal, solveTime, value, bound, gap = result
 
-    heurRes = heurSolve(fileToRun)
+    heurRes = heurConvexSolve(fileToRun)
     if heurRes == nothing
         println("Heuristic NOT FEASIBLE!!")
         return false

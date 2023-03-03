@@ -13,7 +13,8 @@ pathSolve("dummy_graph.txt")
 # Expected result on dummy_graph is 3
 """
 
-function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true, boundMode::Int64=2, relaxed::Bool=false, T_val::Any=nothing)::Any
+function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true, boundMode::Int64=2,
+     relaxed::Bool=false, T_val::Any=nothing, convex::Bool=false)::Any
     """
     """
     if relaxed
@@ -118,6 +119,12 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
     @variable(model, alpha[i in 1:n, k in 1:numberOfCommodities])
 
     # Objective : sum on a in A_1 and k in K of the z_a * n_k
+    if relaxed && convex
+        @variable(model, 0.9 <= y_plus[i in 1:n, j in 1:n, k in 1:numberOfCommodities] <= 1.)
+        @variable(model, 0. <= y_moins[i in 1:n, j in 1:n, k in 1:numberOfCommodities] <= 0.1)
+        @constraint(model, [i in 1:n, j in 1:n, k in 1:numberOfCommodities], y[i, j, k] == y_plus[i, j, k] + y_moins[i, j, k])
+        @constraint(model, [i in 1:n, j in 1:n, k in 1:numberOfCommodities], y_plus[i, j, k] * y_moins[i, j, k]==0)
+    end
     @objective(model, Max, sum(z[i, j, k] * n_k[k] for (i, j, _) in eachrow(A_1) for k in 1:numberOfCommodities))
 
     ### Constraints
