@@ -70,7 +70,7 @@ function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, f
 end
 
 
-function solveAllInstances(resultFile::String=RESULTS_FILE, timeLimit::Float64=-1.; boundMode::Int64=2)::Nothing
+function solveAllInstances(resultFile::String=RESULTS_FILE; timeLimit::Float64=-1., boundMode::Int64=2)::Nothing
     # Loading
     filePath =RESULTS_DIR_PATH * "\\" * resultFile * ".csv"
     # Get unoptimal instance
