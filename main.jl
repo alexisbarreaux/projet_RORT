@@ -7,8 +7,8 @@ include("./heuristics/heuristic2.jl")
 
 """
 include("./main.jl")
-solveAllInstances()
 solveAllInstancesWithHeuristic()
+solveAllInstances()
 """
 
 function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::String, timeLimit::Float64, rowToReplace::Union{Int, Nothing}=nothing; boundMode::Int64)::Bool
@@ -53,18 +53,18 @@ function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, f
         println("NOT FEASIBLE!!")
         return false
     end
-    optimal, solveTime, value, bound, gap = result
+    optimal, solveTime, PLNEValue, bound, gap = result
 
-    heurRes = heurSolve(fileToRun)
+    heurRes = heurLocal(fileToRun)
     if heurRes == nothing
         println("Heuristic NOT FEASIBLE!!")
         return false
     end
     _, heurSolveTime, heurValue, _, _ = heurRes
 
-    heurGap = round(100- 100*heurValue/value, digits=1)
+    heurGap = round(100- 100*heurValue/PLNEValue, digits=1)
     
-    push!(currentResults, [fileToRun optimal solveTime heurSolveTime value heurValue heurGap])
+    push!(currentResults, [fileToRun optimal solveTime heurSolveTime PLNEValue heurValue heurGap])
     return true
 end
 
