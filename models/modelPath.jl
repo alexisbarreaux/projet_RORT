@@ -86,9 +86,10 @@ function pathSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
             ds = dijkstra_shortest_paths(A2OnlyGraph, i, weights)
             dijkstraValue = ds.dists[j]
             if dijkstraValue != Inf
-                M_a[(i,j)] = dijkstraValue
+                best_value = min(maxC_k , dijkstraValue)
+                M_a[(i,j)] = best_value - c_a
                 for k in 1:numberOfCommodities
-                    M_a_k[(i,j,k)] = dijkstraValue
+                    M_a_k[(i,j,k)] = min(M[(K[k,1], K[k,2])], dijkstraValue)
                 end
             else
                 M_a[(i,j)] = maxC_k - c_a

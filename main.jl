@@ -12,7 +12,6 @@ solveAllInstancesWithHeuristic()
 """
 
 function runInstanceAndUpdateDataframe(currentResults::DataFrame, fileToRun::String, timeLimit::Float64, rowToReplace::Union{Int, Nothing}=nothing; boundMode::Int64)::Bool
-    
     result = pathSolve(fileToRun, timeLimit=timeLimit, silent=true, boundMode=boundMode)
     if result == nothing
         println("NOT FEASIBLE!!")
@@ -49,7 +48,7 @@ end
 
 function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, fileToRun::String, timeLimit::Float64, rowToReplace::Union{Int, Nothing}=nothing)::Bool
     
-    result = pathSolve(fileToRun, timeLimit=timeLimit, silent=true, boundMode=2)
+    result = pathSolve(fileToRun, timeLimit=timeLimit, silent=true, boundMode=3)
     if result == nothing
         println("NOT FEASIBLE!!")
         return false
@@ -70,7 +69,7 @@ function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, f
 end
 
 
-function solveAllInstances(resultFile::String=RESULTS_FILE; timeLimit::Float64=-1., boundMode::Int64=2)::Nothing
+function solveAllInstances(resultFile::String=RESULTS_FILE; timeLimit::Float64=-1., boundMode::Int64=3)::Nothing
     # Loading
     filePath =RESULTS_DIR_PATH * "\\" * resultFile * ".csv"
     # Get unoptimal instance

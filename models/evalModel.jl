@@ -38,7 +38,7 @@ function evalSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
     ### Variables
     # Fix T
     T = T_val
-    @variable(model, y[i in 1:n, j in 1:n, k in 1:numberOfCommodities], Bin)
+    @variable(model, 0. <= y[i in 1:n, j in 1:n, k in 1:numberOfCommodities] <= 1.)
 
     # Variables from second level
     @variable(model, alpha[i in 1:n, k in 1:numberOfCommodities])
@@ -140,9 +140,7 @@ function evalSolve(inputFile::String; timeLimit::Float64= -1., silent::Bool=true
     if feasibleSolutionFound
         solveTime = round(JuMP.solve_time(model), digits=5)
         value = round(JuMP.objective_value(model), digits=5)
-        gap = JuMP.relative_gap(model)
-        bound = JuMP.objective_bound(model)
-        return isOptimal, solveTime, value, bound, gap
+        return isOptimal, solveTime, value, 0., 0.
     else
         println("Problem is not feasible !!!")
         return
