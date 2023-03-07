@@ -55,7 +55,7 @@ function runInstanceAndUpdateDataframeWithHeuristic(currentResults::DataFrame, f
     end
     optimal, solveTime, PLNEValue, bound, gap = result
 
-    heurRes = heurLocal(fileToRun)
+    heurRes = heurSolve(fileToRun)
     if heurRes == nothing
         println("Heuristic NOT FEASIBLE!!")
         return false
