@@ -1,5 +1,6 @@
 using JuMP
 using CPLEX
+using Random
 
 include("../utils/constants.jl")
 include("../utils/graphBuildingUtils.jl")
@@ -13,6 +14,7 @@ include("./heuristics/heuristic2.jl")
 heurSolveLocal2("taxe_grille_5x6.txt")
 heurSolveLocal("taxe_grille_5x6.txt")
 heurSolve("taxe_grille_2x3.txt")
+randomHeurSolve("taxe_grille_5x6.txt")
 """
 
 function heurSolve(inputFile::String)
@@ -92,4 +94,19 @@ function heurSolveLocal2(inputFile::String)
     end
 
     return isOptimal, time() - start, bestValue, 0., 0.
+end
+
+function randomHeurSolve(inputFile::String)
+    start = time()
+    include(DATA_DIR_PATH * "\\" * inputFile)
+    max_A2 = maximum(A_2[:,3])
+    numberOfArcs_A1 = size(A_1)[1]
+    tolls = rand(0:max_A2, numberOfArcs_A1)
+    T_val = Matrix{Float64}(undef, n, n)
+    for i in 1:numberOfArcs_A1
+        (i,j,_ ) = A_1[i,:]
+        T_val[i,j] = tolls[i]
+    end
+    isOptimal, fixedSolveTime, value, bound, gap= evalSolve(inputFile, T_val = T_val)
+    return isOptimal, time() - start, value, bound, gap
 end
